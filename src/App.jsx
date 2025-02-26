@@ -49,28 +49,3 @@ const App = () => {
 };
 
 export default App;
-
-// {
-//   "success": true,
-//   "statuscode": 1,
-//   "message": "Message sent successfully",
-//   "data": {
-//       "_id": "67bc3c0f6b8faf99af647662",
-//       "chat_room_id": "67bc1ca36b8faf99af647498",
-//       "sender_id": "67bc1bed6b8faf99af647487",
-//       "receiver_id": "67bc09036b8faf99af647331",
-//       "message_time": "2025-02-24T09:29:51.806Z",
-//       "message": "hey",
-//       "message_type": "text",
-//       "media_file": [],
-//       "is_read": "sent",
-//       "is_pin": false,
-//       "is_edited": false,
-//       "is_forwarded": false,
-//       "is_delete_everyone": false,
-//       "is_delete_by": [],
-//       "replied_message_media": [],
-//       "createdAt": "2025-02-24T09:29:51.900Z",
-//       "updatedAt": "2025-02-24T09:29:51.900Z"
-//   }
-// }

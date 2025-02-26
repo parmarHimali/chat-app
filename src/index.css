@@ -41,6 +41,15 @@ a {
   font-size: 13px;
 }
 /* chat */
+.left-chat {
+  max-height: 100vh;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.right-chat {
+  max-height: 100vh;
+}
 .chat-main-container {
   background-color: whitesmoke;
   width: 100%;
@@ -200,8 +209,19 @@ a {
   align-items: center;
   gap: 4px;
 }
+.unread-count {
+  font-weight: normal;
+  padding: 0 5px;
+  border-radius: 50%;
+  font-size: 10px;
+  color: white;
+  align-self: center;
+  background-color: steelblue;
+  margin-top: 4px;
+}
 .chat-data .msg {
   font-size: 13px;
+  justify-content: space-between;
 }
 
 .loading {
@@ -215,6 +235,7 @@ a {
 /* split container */
 .split-container {
   display: flex;
+  max-height: 100vh;
 }
 
 /* scrollbar  */
@@ -272,4 +293,35 @@ a {
   margin-bottom: 2px;
   align-self: flex-end;
   border-radius: 4px;
+}
+
+/* group  */
+.user-list-grp {
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  padding: 10px 2px;
+}
+.user-list-grp div {
+  border-bottom: var(--light-border);
+  padding-bottom: 3px;
+}
+.user-list-grp div .btn-add {
+  /* align-self: flex-end; */
+  background-color: steelblue;
+  display: flex;
+  align-items: center;
+  color: white;
+  padding: 3px 4px;
+  border-radius: 23px;
+  cursor: pointer;
+}
+
+.user-list-grp div .btn-remove {
+  background-color: rgb(203, 7, 7);
+}
+.selected {
+  font-size: 13px;
+  color: #555;
+  font-weight: bold;
 }

@@ -3,7 +3,8 @@ import { useFormik } from "formik";
 import React, { useContext, useEffect } from "react";
 import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
-import { BASE_URL, socket } from "../App";
+import { BASE_URL } from "../App";
+import { socket } from "../App";
 import { toast } from "react-toastify";
 import { UserContext } from "../context/UserContextWrapper";
 
@@ -13,7 +14,7 @@ const SignIn = () => {
 
   useEffect(() => {
     socket.on("setSocketId", (data) => {
-      console.log("server response(setSocketId): ", data);
+      // console.log("server response(setSocketId): ", data);
     });
   }, [socket]);
   const formik = useFormik({

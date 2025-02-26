@@ -31,3 +31,34 @@ Currently, two official plugins are available:
 }
 
 token_1740381247906
+
+create group
+
+```
+{
+    "success": true,
+    "statuscode": 1,
+    "message": "Group created successfully",
+    "data": {
+        "room_type": "group",
+        "group_name": "group2",
+        "group_image": null,
+        "created_by": "67bc09036b8faf99af647331",
+        "member_ids": [
+            "67bc1bed6b8faf99af647487",
+            "67bd5c4a9d187201cbe7fd6c",
+            "67bc09036b8faf99af647331"
+        ],
+        "admin_ids": [
+            "67bc09036b8faf99af647331"
+        ],
+        "is_deleted": false,
+        "is_delete_by": [],
+        "muted_by": [],
+        "_id": "67beae27be92e9f5f5515e14",
+        "themes": [],
+        "createdAt": "2025-02-26T06:01:11.699Z",
+        "updatedAt": "2025-02-26T06:01:11.699Z"
+    }
+}
+```

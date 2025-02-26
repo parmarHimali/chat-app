@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { data, useNavigate } from "react-router-dom";
 import { Container, Form, Button, Dropdown } from "react-bootstrap";
 import { IoCheckmarkDoneSharp, IoSend } from "react-icons/io5";
 import { UserContext } from "../context/UserContextWrapper";
@@ -20,7 +20,14 @@ const Chat = () => {
   const { user } = useContext(UserContext);
   const navigateTo = useNavigate();
   const messageEnd = useRef(null);
-  const { chatRoomData, setChatRoomData, details } = useContext(chatContext);
+  const { chatRoomData, setChatRoomData, details, chatUserList } =
+    useContext(chatContext);
+
+  useEffect(() => {
+    console.log("details", details);
+    // console.log("chat room data", chatRoomData);
+    // console.log("chatUserList", chatUserList);
+  }, [details, chatRoomData, chatUserList]);
 
   useEffect(() => {
     const isAuthorized = () => {
@@ -40,8 +47,21 @@ const Chat = () => {
       );
       toast.success(data.message);
     });
+    const handleEditChat = (data) => {
+      console.log("(editChat)", data);
+
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg._id === data.data._id
+            ? { ...msg, message: data.data.message, is_edited: true }
+            : msg
+        )
+      );
+    };
+
+    socket.on("editChat", handleEditChat);
+
     socket.on("unPinMessage", (data) => {
-      console.log("(unPinMessage)", data);
       setMessages((prev) =>
         prev.map((msg) =>
           msg._id == data.data._id ? { ...msg, is_pin: false } : msg
@@ -49,10 +69,14 @@ const Chat = () => {
       );
       toast.success(data.message);
     });
+
+    return () => {
+      socket.off("editChat", handleEditChat);
+    };
   }, []);
 
   useEffect(() => {
-    if (chatRoomData.messages) {
+    if (chatRoomData?.messages) {
       setMessages(
         [...chatRoomData.messages].sort(
           (a, b) => new Date(a.message_time) - new Date(b.message_time)
@@ -65,14 +89,6 @@ const Chat = () => {
     messageEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleGetAllMessages = (data) => {
-    setChatRoomData(data.data);
-    setMessages(
-      [...data.data.messages].sort(
-        (a, b) => new Date(a.message_time) - new Date(b.message_time)
-      )
-    );
-  };
   useEffect(() => {
     const handleNewMessage = (data) => {
       setMessages((prev) =>
@@ -81,58 +97,68 @@ const Chat = () => {
         )
       );
     };
+    if (data.room_type == "personal") {
+      const handleGetAllMessages = (data) => {
+        setChatRoomData(data.data);
+        setMessages(
+          [...data?.data?.messages].sort(
+            (a, b) => new Date(a.message_time) - new Date(b.message_time)
+          )
+        );
+      };
 
-    socket.on("sendMessage", handleNewMessage);
-    socket.on("getAllMessage", handleGetAllMessages);
+      socket.on("sendMessage", handleNewMessage);
+      socket.on("getAllMessage", handleGetAllMessages);
 
-    return () => {
-      socket.off("sendMessage", handleNewMessage);
-      socket.off("getAllMessage", handleGetAllMessages);
-    };
+      return () => {
+        socket.off("sendMessage", handleNewMessage);
+        socket.off("getAllMessage", handleGetAllMessages);
+      };
+    } else if (data.room_type == "group") {
+      console.log("room type is group");
+    }
   }, [setChatRoomData]);
   useEffect(() => {
     let timeout;
     socket.on("clearChat", (data) => {
-      console.log("(clearChat)", data);
       setMessages([]);
       setChatRoomData({ ...chatRoomData, messages: [] });
       toast.success(data.message);
     });
     socket.on("userIsTyping", (data) => {
-      // console.log("(userIsTyping)", data);
       setTyping(data.data.chat_room_data.full_name);
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         setTyping("");
       }, 3000);
     });
-    socket.on("editChat", (data) => {
-      console.log("(editChat)", data);
-    });
-    socket.on("getAllMessage", (data) => {
-      setChatRoomData(data.data);
-      setMessages(
-        [...data.data.messages].sort(
-          (a, b) => new Date(a.message_time) - new Date(b.message_time)
-        )
-      );
-    });
+
+    if (data.room_type == "personal") {
+      socket.on("getAllMessage", (data) => {
+        setChatRoomData(data.data);
+        setMessages(
+          [...data.data.messages].sort(
+            (a, b) => new Date(a.message_time) - new Date(b.message_time)
+          )
+        );
+      });
+    }
     return () => {
       clearTimeout(timeout);
       socket.off("userIsTyping");
     };
   }, [socket]);
 
-  useEffect(() => {
-    if (chatRoomData?.chat_room_data?._id) {
-      socket.emit("getAllMessage", {
-        chat_room_id: chatRoomData.chat_room_data._id,
-        user_id: user._id,
-        page: 1,
-        limit: 50,
-      });
-    }
-  }, [chatRoomData?.chat_room_data?._id]);
+  // useEffect(() => {
+  //   if (chatRoomData?.chat_room_data?._id) {
+  //     socket.emit("getAllMessage", {
+  //       chat_room_id: chatRoomData.chat_room_data._id,
+  //       user_id: user._id,
+  //       page: 1,
+  //       limit: 50,
+  //     });
+  //   }
+  // }, [chatRoomData?.chat_room_data?._id]);
 
   const handleUpdate = (e) => {
     e.preventDefault();
@@ -142,6 +168,13 @@ const Chat = () => {
       return;
     }
 
+    const updatedMessage = {
+      ...editMessage,
+      message: editMessage.message, // New edited message
+      is_edited: true, // Mark as edited
+    };
+
+    // Emit event to the server
     socket.emit("editChat", {
       chat_room_id: chatRoomData.chat_room_data._id,
       user_id: user._id,
@@ -149,22 +182,16 @@ const Chat = () => {
       message: editMessage.message,
       message_type: "text",
     });
-    // setMessages((prev) =>
-    //   prev.map((msg) =>
-    //     msg._id == editMessage._id
-    //       ? { ...msg, message: editMessage.message }
-    //       : msg
-    //   )
-    // );
-    socket.emit("getAllMessage", {
-      chat_room_id: chatRoomData.chat_room_data._id,
-      user_id: user._id,
-      page: 1,
-      limit: 50,
-    });
+
+    // Update state immediately instead of waiting for a server response
+    setMessages((prev) =>
+      prev.map((msg) => (msg._id === editMessage._id ? updatedMessage : msg))
+    );
+
     setIsEdit(false);
     setEditMessage({});
   };
+
   const handleSend = (e) => {
     e.preventDefault();
     if (!msg.trim()) return;
@@ -224,8 +251,9 @@ const Chat = () => {
       </div>
     );
   }
+
   return (
-    <Container className="p-0">
+    <Container className="p-0 right-chat">
       <div className="chat-main-container">
         <div className="chat-header-container">
           <div className="chat-header">
@@ -236,7 +264,14 @@ const Chat = () => {
               <img src="/user.jpg" alt="user's profile" width="50px" />
             </div>
             <div className="username">
-              <div>{chatRoomData?.chat_room_data?.full_name || "Unknown"}</div>
+              {/* {chatRoomData} */}
+              {details.room_type == "group" ? (
+                <div>{details.group_name}</div>
+              ) : (
+                <div>
+                  {chatRoomData?.chat_room_data?.full_name || "Unknown"}
+                </div>
+              )}
               <div>{typing && typing != user.full_name && `typing...`}</div>
             </div>
           </div>
@@ -258,9 +293,9 @@ const Chat = () => {
         </div>
 
         <div className="pinned-msgs">
-          {chatRoomData.pinned_message && (
+          {chatRoomData?.pinned_message && (
             <div className="pin-msg">
-              <BsPinFill /> <span>{chatRoomData.pinned_message.message}</span>
+              <BsPinFill /> <span>{chatRoomData?.pinned_message?.message}</span>
             </div>
           )}
         </div>
